@@ -1,50 +1,101 @@
-<%String contextPath = request.getContextPath(); %>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Add Item</title>
-    <link rel="stylesheet" href="<%= contextPath %>/stylesheet/Admin.css">
-    <link rel="stylesheet" href="<%= contextPath %>/stylesheet/adminhead.css">
-</head>
-<body>
-    <nav class="admin-navbar">
-        <div class="logo">
-            <img src="<%= contextPath %>/images/ByteBay.png" alt="Admin Logo"> <!-- Update the 'src' with your actual logo path -->
-        </div>
-        <ul class="nav-links">
-            <li><a href="#view-orders">View Orders</a></li>
-            <li><a href="#add-product">Add Product</a></li>
-            <li><a href="#products">Products</a></li>
-            <li><button onclick="logout()">Logout</button></li>
-        </ul>
-    </nav>
 
-    <div class="container">
-        <h2>Add New Item</h2>
-        <form id="addItemForm">
-            <label for="itemName">Item Name:</label>
-            <input type="text" id="itemName" name="itemName" required>
+package controller;
 
-            <label for="itemDesc">Description:</label>
-            <textarea id="itemDesc" name="itemDesc" required></textarea>
 
-            <label for="itemPrice">Price ($):</label>
-            <input type="number" id="itemPrice" name="itemPrice" required min="0" step="0.01">
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
-            <label for="itemQuantity">Quantity:</label>
-            <input type="number" id="itemQuantity" name="itemQuantity" required min="0" step="1">
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-            <label for="itemImage">Upload Image:</label>
-            <input type="file" id="itemImage" name="itemImage" accept="image/*" onchange="previewImage();">
+/**
+ * Servlet implementation class registerServlet
+ */
+@WebServlet("/registerServlet")
+public class registerServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+       
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public registerServlet() {
+        super();
+        // TODO Auto-generated constructor stub
+    }
 
-            <img id="preview" class="preview" src="" alt="Image Preview" style="display: none;">
+	/**
+	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		response.getWriter().append("Served at: ").append(request.getContextPath());
+	}
 
-            <button type="button" onclick="submitItemForm();">Add Item</button>
-        </form>
-    </div>
+	/**
+	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		doGet(request, response);
+		
+		response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
 
-    <script src="script.js"></script>
-</body>
-</html>
+        // Retrieve form data
+        String firstName = request.getParameter("firstName");
+        String lastName = request.getParameter("lastName");
+        String username = request.getParameter("username");
+        String email = request.getParameter("email");
+        String password = request.getParameter("password");
+        String phone = request.getParameter("phone");
+
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+
+            // DB connection
+            String url = "jdbc:mysql://localhost:3306/ecomm";
+            String user = "root";
+            String pass = "";
+            Connection con = DriverManager.getConnection(url, user, pass);
+
+            // SQL query to insert data
+            String query = "INSERT INTO user_info (firstName, lastName, username, email, password, phone) VALUES (?, ?, ?, ?, ?, ?)";
+            PreparedStatement st = con.prepareStatement(query);
+
+            // Setting parameters
+            st.setString(1, firstName);
+            st.setString(2, lastName);
+            st.setString(3, username);
+            st.setString(4, email);
+            st.setString(5, password);
+            st.setString(6, phone);
+
+            int result = st.executeUpdate(); // Executes the insert query
+
+            if (result > 0) {
+                // Registration successful, redirect to login page
+                response.sendRedirect(request.getContextPath() + "/pages/SignIn.jsp");
+            } else {
+                out.println("<h1>Error! Your data was not registered.</h1>");
+            }
+
+            st.close();
+            con.close();
+        } catch (SQLException | ClassNotFoundException ex) {
+            // Exception encountered during database operations
+            System.err.println("Failed to execute database operation!");
+            ex.printStackTrace();
+            out.println("<h1>Error!</h1>");
+        } finally {
+            out.close();
+        }
+    }
+}
+
